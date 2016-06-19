@@ -9,4 +9,4 @@ Suggests: R.rsp, R.devices, R.utils
 VignetteBuilder: R.rsp
 Description: Implements babel routines for identifying unusual ribosome protected fragment counts given mRNA counts
 License: LGPL (>= 2.1)
-Packaged: 2015-05-19 21:25:35 UTC; olshena
+
