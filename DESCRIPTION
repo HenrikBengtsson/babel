@@ -1,12 +1,12 @@
 Package: babel
 Version: 0.2-6.2
-Title: Ribosome profiling data analysis
+Title: Ribosome Profiling Data Analysis
 Author: Adam B. Olshen, Richard A. Olshen, Barry S. Taylor
 Maintainer: Adam B. Olshen <adam.olshen@ucsf.edu>
 Depends: R (>= 2.14.0), edgeR
 Imports: parallel
 Suggests: R.rsp, R.devices, R.utils
 VignetteBuilder: R.rsp
-Description: Implements babel routines for identifying unusual ribosome protected fragment counts given mRNA counts
+Description: Included here are babel routines for identifying unusual ribosome protected fragment counts given mRNA counts.
 License: LGPL (>= 2.1)
 
