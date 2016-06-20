@@ -25,6 +25,9 @@ matrix:
     - os: osx
       r: devel
 
+bioc_packages:
+  - edgeR
+  
 r_github_packages:
   - jimhester/covr
 
