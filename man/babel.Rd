@@ -5,7 +5,7 @@
 From paired mRNA and ribosome protected fragment count data run Babel analysis to detect changes in translation.
 }
 \usage{
-babel(rna,rp,group,nreps,method.adjust="BH",min.rna=10,...)
+babel(rna,rp,group,nreps,method.adjust="BH",min.rna=10,nSD=3,...)
 }
 \arguments{
   \item{rna}{a matrix or data frame of raw (not normalized) mRNA count data whose rows
@@ -22,6 +22,7 @@ babel(rna,rp,group,nreps,method.adjust="BH",min.rna=10,...)
     by p.adjust.}
   \item{min.rna}{minimum number of rna counts across all samples for a
     gene to be included.  Default is 10.}
+  \item{nSD}{Number of SDs from mean such that gene is included in standard error calculation.  Should be between 2 and 3, lower leads to more power.  Default is 3.}
   \item{...}{Additional arguments.}
 }
 
