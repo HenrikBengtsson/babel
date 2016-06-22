@@ -5,7 +5,8 @@ test.rp <- ribo.prof$test.rp
 test.group=c("A","B","A","B")
 set.seed(12345)
 options(mc.cores=1)
-test.babel <- babel(test.rna,test.rp,group=test.group,nreps=10000,min.rna=10,minreps=10000)
+options(babel.minreps=10000)
+test.babel <- babel(test.rna,test.rp,group=test.group,nreps=10000,min.rna=10)
 within.babel <- test.babel$within
 combined.babel <- test.babel$combined
 between.babel <- test.babel$between
