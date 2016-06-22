@@ -409,7 +409,7 @@ babel <- function(rna,rp,group,nreps,method.adjust="BH",min.rna=10,nSD=3,...)
     if(sum(rownames(rna)==rownames(rp))<n) stop("rownames of rna and rp must match")
     if(sum(colnames(rna)==colnames(rp))<p) stop("colnames of rna and rp must match")
     if((nreps%%10000)!=0) stop("nreps must be divisible by 10000")
-    if(!exists("minreps",mode="integer")) minreps <- 100000
+    minreps <- getOption("babel.minreps", 100000L)
     if(nreps<minreps) stop(paste("nreps must at least",minreps))
     if(min.rna<1) stop("min.rna needs to be at least 1")
 #    if(length(unique(group))!=2) stop("There must be exactly two groups")
