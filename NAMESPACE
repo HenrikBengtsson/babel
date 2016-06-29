@@ -1,3 +1,5 @@
 import(parallel)
 import(edgeR)
 export(babel)
+importFrom("stats", "cov", "lsfit", "median", "p.adjust", "pnbinom",
+           "pnorm", "qnorm", "quantile", "rnbinom", "var")

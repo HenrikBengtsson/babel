@@ -1,17 +1,22 @@
 Package: babel
 ==============
 
-Version: 0.2-3 [2013-12-03]
-o First version submitted to CRAN
+Version: 0.3-0 [2016-06-22]
+o nSD parameter, which is used to define outliers when computing the
+standard error of the between statistic, is now accessible to users. 
 
-Version: 0.2-4 [2013-12-19]
-o Group label bug fixed
+Version: 0.2-6 [2014-04-23]
+o doBetween fold change fixed to have proper sign
 
 Version: 0.2-5 [2014-01-08]
 o doBetween ...  bug fixed
 
-Version: 0.2-6 [2014-04-23]
-o doBetween fold change fixed to have proper sign
+Version: 0.2-4 [2013-12-19]
+o Group label bug fixed
+
+Version: 0.2-3 [2013-12-03]
+o First version submitted to CRAN
+
 
 
 

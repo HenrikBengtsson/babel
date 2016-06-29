@@ -126,18 +126,22 @@ fitter <- function(rna.vector, rp.vector, method, trim.x=NULL, trim.y=FALSE, dis
 
 combined3.p <- function(vec)
   {
-    n <- length(vec)
-    n.fac <- gamma(n+1)
-    sum.vec <- sum(vec)
-    floor.vec <- floor(sum.vec)
-    output <- 0
-    for(k in 0:floor.vec)
+    if(sum(is.na(vec)) > 0) output <- NA
+    else
       {
-        output <- output+((-1)^k)*(n.fac)*((sum.vec-k)^n)/(gamma(n-k+1)*gamma(k+
-1))
+        n <- length(vec)
+        n.fac <- gamma(n+1)
+        sum.vec <- sum(vec)
+        floor.vec <- floor(sum.vec)
+        output <- 0
+        for(k in 0:floor.vec)
+          {
+            output <- output+((-1)^k)*(n.fac)*((sum.vec-k)^n)/(gamma(n-k+1)*gamma(k+
+                                                                                  1))
 #        print(output)
-    }
-    output <- output/n.fac
+          }
+        output <- output/n.fac
+      }
     output
   }
 
@@ -157,14 +161,17 @@ doBetween <- function(pmat,group,nSD=3,type=c("one-sided","two-sided"))
         which.i <- which(group==unique.group[i])
         zmat.i <- as.matrix(zmat[,which.i])
         num1 <- rowSums(zmat.i)
+        which.del.i <- which(is.na(num1))
         for(j in (i+1):n)
           {
             which.j <- which(group==unique.group[j])
             zmat.j <- as.matrix(zmat[,which.j])
             num2 <- rowSums(zmat.j)
+            which.del.j <- which(is.na(num2))
             num <- num1-num2
             p <- length(which.i)+length(which.j)
             which.del <- which(abs(num)>(nSD*sqrt(p)))
+            which.del <- sort(unique(c(which.del.i,which.del.j,which.del)))
             zmat.ij <- cbind(zmat.i,zmat.j)
             if(length(which.del)>0) zmat.ij <- zmat.ij[-which.del,]
             covmat <- cov(zmat.ij)
@@ -213,9 +220,9 @@ doCount <- function(rnv.pos,rnadisp,fit,rpdisp,match.rnv.urnv,rpv)
 doWithin <- function(rna,rp,group,nreps,keeper.genes,trim.x=0.1,trim.var=0.1,rnadisp=NULL)
 {
   n <- ncol(rna)
-  rna <- rna[keeper.genes,]
-  rp <- rp[keeper.genes,]
-  smat <- matrix(0,nrow(rna),n)
+#  rna <- rna[keeper.genes,]
+#  rp <- rp[keeper.genes,]
+  smat <- matrix(NA_real_,nrow(rna),n)
   rownames(smat) <- rownames(rna)
   colnames(smat) <- colnames(rna)
   if(!is.null(rnadisp)) rnadisp <- rnadisp
@@ -243,8 +250,9 @@ doWithin <- function(rna,rp,group,nreps,keeper.genes,trim.x=0.1,trim.var=0.1,rna
   for(i in seq_len(n))
     {
       print(paste("Running",colnames(rna)[i]))
-      rnv <- rna[,i]; # This sample's RNA
-      rpv <- rp[,i]; # This sample's Ribosome
+      current.keepers <- which(keeper.genes[,i])
+      rnv <- rna[current.keepers,i]; # This sample's RNA
+      rpv <- rp[current.keepers,i]; # This sample's Ribosome
       rpdisp <- rpDisp(rnv,rpv)$disp; # Defaults for rpDisp currently match our desired input
       urnv <- unique(rnv); # Unique values of RNA read counts
       match.rnv.urnv <- match(rnv,urnv)
@@ -256,7 +264,7 @@ doWithin <- function(rna,rp,group,nreps,keeper.genes,trim.x=0.1,trim.var=0.1,rna
                 rpdisp=rpdisp, match.rnv.urnv=match.rnv.urnv, rpv=rpv)
       })
           count <- Reduce(`+`,counts)
-          smat[,i] <- count
+          smat[current.keepers,i] <- count
     }
   pmat <- (smat+1)/(nreps+2)
   pmat
@@ -283,18 +291,25 @@ formatWithin <- function(within,method,p,rnames,cnames,keeper.genes,n)
     alt <- 2*(1-within)
     which.switch <- which(alt<twosided)
     twosided[which.switch] <- alt[which.switch]
-    qvalues <- apply(twosided,2,p.adjust,method=method)
+    qvalues <- matrix(NA_real_,n,p)
+    for(i in seq_len(p))
+      {
+        current.keepers <- which(keeper.genes[,i])
+        qvalues[current.keepers,i] <- p.adjust(twosided[current.keepers,i],method=method)
+      }
+#    qvalues <- apply(twosided,2,p.adjust,method=method)
     direction <- matrix(1,nrow(within),ncol(within))
     direction[which(within>0.5)] <- (-1)
     output.within <- vector("list",p)
     names(output.within) <- cnames
     for(i in seq_len(p))
       {
+        current.keepers <- which(keeper.genes[,i])
         new.direction <- new.within <- new.twosided <- new.qvalues <- rep(NA_real_,n)
-        new.direction[keeper.genes] <- direction[,i]
-        new.within[keeper.genes] <- within[,i]
-        new.twosided[keeper.genes] <- twosided[,i]
-        new.qvalues[keeper.genes] <- qvalues[,i]
+        new.direction[current.keepers] <- direction[current.keepers,i]
+        new.within[current.keepers] <- within[current.keepers,i]
+        new.twosided[current.keepers] <- twosided[current.keepers,i]
+        new.qvalues[current.keepers] <- qvalues[current.keepers,i]
         output.within[[i]] <- cbind.data.frame(rnames,new.direction,new.within,new.twosided,new.qvalues)
 #        output.within[[i]] <- cbind.data.frame(rnames,direction[,i],within[,i],twosided[,i],qvalues[,i])        
         rownames(output.within[[i]]) <- NULL
@@ -303,7 +318,7 @@ formatWithin <- function(within,method,p,rnames,cnames,keeper.genes,n)
     output.within
   }
 
-formatCombined <- function(combined,group,method,rnames,keeper.genes,n)
+formatCombined <- function(combined,group,method,rnames,n)
 {
   twosided <- 2*combined
   alt <- 2*(1-combined)
@@ -318,19 +333,20 @@ formatCombined <- function(combined,group,method,rnames,keeper.genes,n)
   names(output.combined) <- ugroup
   for(i in seq_len(lgroup))
     {
-        new.direction <- new.twosided <- new.qvalues <- rep(NA_real_,n)
-        new.direction[keeper.genes] <- direction[,i]
-        new.twosided[keeper.genes] <- twosided[,i]
-        new.qvalues[keeper.genes] <- qvalues[,i]
-        output.combined[[i]] <- cbind.data.frame(rnames,new.direction,new.twosided,new.qvalues)
+      current.keepers <- which(!is.na(combined[,i]))
+      new.direction <- new.twosided <- new.qvalues <- rep(NA_real_,n)
+      new.direction[current.keepers] <- direction[current.keepers,i]
+      new.twosided[current.keepers] <- twosided[current.keepers,i]
+      new.qvalues[current.keepers] <- qvalues[current.keepers,i]
+      output.combined[[i]] <- cbind.data.frame(rnames,new.direction,new.twosided,new.qvalues)
 #        output.combined[[i]] <- cbind.data.frame(rnames,direction[,i],twosided[,i],qvalues[,i])
-        rownames(output.combined[[i]]) <- NULL
-        colnames(output.combined[[i]]) <- c("Gene","Direction","P-value","FDR")        
+      rownames(output.combined[[i]]) <- NULL
+      colnames(output.combined[[i]]) <- c("Gene","Direction","P-value","FDR")        
     }
   output.combined
 }
 
-formatBetween <- function(between,rna,group,method,keeper.genes=keeper.genes,n=n)
+formatBetween <- function(between,rna,group,method,n=n)
   {
     min.group <- min(table(group))
     ugroup <- unique(group)
@@ -347,9 +363,9 @@ formatBetween <- function(between,rna,group,method,keeper.genes=keeper.genes,n=n
             if(min.group<2)
               {
                 new.between <- new.qvalues <- new.direction <- rep(NA_real_,n)
-                new.between[keeper.genes] <- between$pval[,counter]
-                new.qvalues[keeper.genes] <- qvalues
-                new.direction[keeper.genes] <- between$direction[,counter]
+                new.between <- between$pval[,counter]
+                new.qvalues <- qvalues
+                new.direction <- between$direction[,counter]
                 output.between[[counter]] <-cbind.data.frame(rownames(rna),new.between,new.qvalues,new.direction)
 #                output.between[[counter]] <-cbind.data.frame(rownames(rna),between$pval[,counter],qvalues,between$direction[,counter])
                 colnames(output.between[[counter]]) <- c("Gene","P-value","FDR","Direction")
@@ -367,9 +383,9 @@ formatBetween <- function(between,rna,group,method,keeper.genes=keeper.genes,n=n
                 change.type <- rep("both",nrow(rna))
                 change.type[mrna.qval>0.05 & abs(mrna.logfc)<1.5] <- "translational_only"
                 new.between <- new.qvalues <- new.direction <- rep(NA_real_,n)
-                new.between[keeper.genes] <- between$pval[,counter]
-                new.qvalues[keeper.genes] <- qvalues
-                new.direction[keeper.genes] <- between$direction[,counter]
+                new.between <- between$pval[,counter]
+                new.qvalues <- qvalues
+                new.direction <- between$direction[,counter]
                 output.between[[counter]] <-cbind.data.frame(rownames(rna),mrna.logfc,mrna.qval,change.type,new.between,new.qvalues,new.direction)
 #                output.between[[counter]] <-cbind.data.frame(rownames(rna),mrna.logfc,mrna.qval,change.type,between$pval[,counter],qvalues,between$direction[,counter])
                 colnames(output.between[[counter]]) <- c("Gene","mRNA_logFC","mRNA_FDR","Change_type","P-value","FDR","Direction")
@@ -380,7 +396,7 @@ formatBetween <- function(between,rna,group,method,keeper.genes=keeper.genes,n=n
     output.between
   }
                           
-babel <- function(rna,rp,group,nreps,method.adjust="BH",min.rna=10,...)
+babel <- function(rna,rp,group,nreps,method.adjust="BH",min.rna=10,nSD=3,...)
   {
     if(sum(dim(rna)==dim(rp))<2) stop("rna and rp are different sizes")
     n <- nrow(rna)
@@ -393,17 +409,19 @@ babel <- function(rna,rp,group,nreps,method.adjust="BH",min.rna=10,...)
     if(sum(rownames(rna)==rownames(rp))<n) stop("rownames of rna and rp must match")
     if(sum(colnames(rna)==colnames(rp))<p) stop("colnames of rna and rp must match")
     if((nreps%%10000)!=0) stop("nreps must be divisible by 10000")
-    if(nreps<100000) stop("nreps must at least 100,000")
+    minreps <- getOption("babel.minreps", 100000L)
+    if(nreps<minreps) stop(paste("nreps must at least",minreps))
     if(min.rna<1) stop("min.rna needs to be at least 1")
 #    if(length(unique(group))!=2) stop("There must be exactly two groups")
-    mins.rna <- apply(rna,1,min)
-    keeper.genes <- which(mins.rna>=min.rna)
+#    mins.rna <- apply(rna,1,min)
+    keeper.genes <- matrix(FALSE,nrow(rna),ncol(rna))
+    keeper.genes[which(rna>=min.rna)] <- TRUE
     within <- doWithin(rna=rna,rp=rp,group=group,nreps=nreps,keeper.genes=keeper.genes,...)
     output.within <- formatWithin(within,method=method.adjust,p=p,rnames=rownames(rna),cnames=colnames(rna),keeper.genes=keeper.genes,n=n)
     combined <- doCombined(within,group)
-    output.combined <- formatCombined(combined,group=group,method=method.adjust,rnames=rownames(rna),keeper.genes=keeper.genes,n=n)
-    between <- doBetween(within,group,type="two-sided")
-    output.between <- formatBetween(between,rna=rna,group=group,method=method.adjust,keeper.genes=keeper.genes,n=n)
+    output.combined <- formatCombined(combined,group=group,method=method.adjust,rnames=rownames(rna),n=n)
+    between <- doBetween(within,group,nSD=nSD,type="two-sided")
+    output.between <- formatBetween(between,rna=rna,group=group,method=method.adjust,n=n)
     list(within=output.within,combined=output.combined,between=output.between)
   }
 
