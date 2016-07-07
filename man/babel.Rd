@@ -5,7 +5,7 @@
 From paired mRNA and ribosome protected fragment count data run Babel analysis to detect changes in translation.
 }
 \usage{
-babel(rna,rp,group,nreps,method.adjust="BH",min.rna=10,nSD=3,...)
+babel(rna,rp,group,nreps,method.adjust="BH",min.rna=10,betweenstat=c("tstat","diffstat"),...)
 }
 \arguments{
   \item{rna}{a matrix or data frame of raw (not normalized) mRNA count data whose rows
@@ -22,7 +22,7 @@ babel(rna,rp,group,nreps,method.adjust="BH",min.rna=10,nSD=3,...)
     by p.adjust.}
   \item{min.rna}{minimum number of rna counts across all samples for a
     gene to be included.  Default is 10.}
-  \item{nSD}{Number of SDs from mean such that gene is included in standard error calculation.  Should be between 2 and 3, lower leads to more power.  Default is 3.}
+  \item{betweenstat}{Either 'tstat' (the default) or 'diffstat'.}
   \item{...}{Additional arguments.}
 }
 
@@ -57,7 +57,22 @@ babel(rna,rp,group,nreps,method.adjust="BH",min.rna=10,nSD=3,...)
   same node using the mclappy command of the parallel library.  By
   default, two cores are used.  Windows cannot use the fork command so
   it can run on only one core.  To adjust the number of cores used, use
-  'options(mc.cores=x)', where x is the number of cores to use.  }
+  'options(mc.cores=x)', where x is the number of cores to use. 
+
+  There are now two ways to make comparisons between conditions.  They
+  are 'tstat' (the default) and 'diffstat'.  There was only diffstat
+  before version 0.4-0.  In both cases "t-statistics" are computed
+  utilizing the difference in qnorm transformed within-gene p-values.  The
+  numerator of both statistics is within gene, while the SE is across
+  genes.  In tstat the numerator is based on averaging within groups
+  before taking the difference, while in diffstat the straight
+  differences between groups are utilized.  The results will be the
+  same when there are equal numbers of samples in each group but
+  slightly different when the group sizes are unequal.  See the babel
+  manuscript for more context.}    
+
+  
+}
 
 \examples{
 data(ribo.prof)
