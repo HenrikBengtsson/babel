@@ -1,4 +1,4 @@
-babel <- function(rna,rp,group,nreps,method.adjust="BH",min.rna=10,nSD=3,...)
+babel <- function(rna,rp,group,nreps,method.adjust="BH",min.rna=10,nSD=3,betweenstat=c("tstat","diffstat"),...)
   {
     if(sum(dim(rna)==dim(rp))<2) stop("rna and rp are different sizes")
     n <- nrow(rna)
@@ -14,15 +14,14 @@ babel <- function(rna,rp,group,nreps,method.adjust="BH",min.rna=10,nSD=3,...)
     minreps <- getOption("babel.minreps", 100000L)
     if(nreps<minreps) stop(paste("nreps must at least",minreps))
     if(min.rna<1) stop("min.rna needs to be at least 1")
-#    if(length(unique(group))!=2) stop("There must be exactly two groups")
-#    mins.rna <- apply(rna,1,min)
+    if(betweenstat!="tstat" & betweenstat!="diffstat") stop("betweenstat must be 'tstat' or 'diffstat'")
     keeper.genes <- matrix(FALSE,nrow(rna),ncol(rna))
     keeper.genes[which(rna>=min.rna)] <- TRUE
     within <- doWithin(rna=rna,rp=rp,group=group,nreps=nreps,keeper.genes=keeper.genes,...)
     output.within <- formatWithin(within,method=method.adjust,p=p,rnames=rownames(rna),cnames=colnames(rna),keeper.genes=keeper.genes,n=n)
     combined <- doCombined(within,group)
     output.combined <- formatCombined(combined,group=group,method=method.adjust,rnames=rownames(rna),n=n)
-    between <- doBetween(within,group,nSD=nSD,type="two-sided")
+    between <- doBetween(within,group,nSD=nSD,type="two-sided",betweenstat=betweenstat)
     output.between <- formatBetween(between,rna=rna,group=group,method=method.adjust,n=n)
     list(within=output.within,combined=output.combined,between=output.between)
   }
